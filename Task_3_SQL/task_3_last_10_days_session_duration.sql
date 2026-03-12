@@ -5,7 +5,7 @@
 */
 
 WITH session_time AS (
-    -- Зводимо події open та close в один рядок для кожної сесії
+    -- Зведення подій open та close в один рядок для кожної сесії
     SELECT 
         id,
         id_user,
@@ -18,17 +18,16 @@ WITH session_time AS (
 ),
 
 session_length_table AS (
-    -- Рахуємо тривалість у годинах та фільтруємо останні 10 днів
+    -- Розразунок тривалості у годинах та фільтрація останніх 10 днів
     SELECT 
         id_user,
         DATE(open_time) AS session_date, 
-        -- EPOCH переводить весь інтервал у секунди, що уникає втрати хвилин
-        EXTRACT(EPOCH FROM (close_time - open_time)) / 3600.0 AS session_hours 
+        EXTRACT(EPOCH FROM (close_time - open_time)) / 3600.0 AS session_hours -- EPOCH переводить весь інтервал у секунди, що уникає втрати хвилин
     FROM session_time
     WHERE DATE(open_time) >= CURRENT_DATE - INTERVAL '9 days' -- або CURRENT_DATE - 9
 )
 
--- Зводимо дні в колонки через умовну агрегацію
+-- Звоедення днів у колонки через умовну агрегацію
 SELECT 
     id_user, 
     SUM(CASE WHEN session_date = CURRENT_DATE - INTERVAL '9 days' THEN session_hours ELSE 0 END) AS day_minus_9,
